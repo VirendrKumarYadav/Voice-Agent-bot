@@ -3,6 +3,10 @@
         "/^cd /Users/virendra/Desktop/Voice\\\\ agent && npm run build$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd /Users/virendra/Desktop/Voice\\\\ agent && npm run dev$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
