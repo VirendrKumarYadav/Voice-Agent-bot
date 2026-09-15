@@ -47,15 +47,15 @@ export default function Home() {
         <p className="text-xs text-slate-500">Powered by Ollama or OpenAI</p>
       </header>
 
-      <main className="grid flex-1 grid-cols-1 md:grid-cols-[minmax(260px,3fr)_minmax(0,7fr)]">
-        <section className="flex min-w-0 flex-col items-center justify-center gap-6 border-b border-slate-200 p-8 md:border-b-0 md:border-r">
+      <main className="grid flex-1 grid-cols-1 md:grid-cols-2">
+        <section className="flex min-w-0 flex-col items-center justify-center gap-8 border-b border-slate-200 p-10 md:border-b-0 md:border-r">
           <VoiceOrb level={level} status={status} />
 
-          <p className="text-sm text-slate-500">{STATUS_LABEL[status]}</p>
+          <p className="text-[1.5rem] text-slate-500">{STATUS_LABEL[status]}</p>
 
           <button
             onClick={isRunning ? stop : start}
-            className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-full px-8 py-4 text-[1.5rem] font-medium transition-colors ${
               isRunning
                 ? "bg-red-500 text-white hover:bg-red-600"
                 : "bg-slate-900 text-white hover:bg-slate-700"
