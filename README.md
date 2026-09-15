@@ -28,9 +28,28 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=phi3:latest
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
+ELEVENLABS_API_KEY=
+ELEVENLABS_VOICE_ID=
+TTS_PROVIDER=browser
 ```
 
 If you want to use OpenAI instead, set `AI_PROVIDER=openai` and add your API key to `OPENAI_API_KEY`.
+
+### Environment variable reference
+
+| Variable | Description |
+| --- | --- |
+| `AI_PROVIDER` | Selects the text-generation backend: `ollama` (default) or `openai`. |
+| `OLLAMA_BASE_URL` | URL of the local Ollama server. Defaults to `http://localhost:11434`. |
+| `OLLAMA_MODEL` | Ollama model used for chat responses, such as `phi3:latest`. The model must already be available in Ollama. |
+| `OPENAI_API_KEY` | Secret OpenAI API key. Required when `AI_PROVIDER=openai`; keep it private and never commit it. |
+| `OPENAI_MODEL` | OpenAI chat model to use, such as `gpt-4o-mini`. |
+| `ELEVENLABS_API_KEY` | Secret ElevenLabs API key for ElevenLabs text-to-speech integrations. |
+| `ELEVENLABS_VOICE_ID` | ElevenLabs voice ID to use for speech synthesis. |
+| `TTS_PROVIDER` | Selects the text-to-speech backend. Use `browser` for the built-in Web Speech API. |
+
+The ElevenLabs variables are optional. Keep `.env.local` out of version control and
+only commit `.env.example` with blank secret values.
 
 Then run the development server:
 
@@ -62,5 +81,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Voice-Agent-bot
 # Voice-Agent-bot
 # Voice-Agent-bot
