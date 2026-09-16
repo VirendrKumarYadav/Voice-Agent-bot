@@ -4,14 +4,98 @@ Voice Agent Tutor is a voice-first learning assistant built with Next.js. Ask a 
 
 ![Voice Agent Tutor initial screen](./public/voice-agent-tutor-initial.png)
 
-## Preview
+## Application architecture
 
-![Voice Agent Tutor interface](./public/voice-agent-tutor.png)
+The request-to-explanation flow moves through the browser, the Next.js API route, and the selected AI provider:
 
-The interface is split into two working areas:
+```text
+                    ┌─────────────────────┐
+                    │       User          │
+                    │  Voice / Text Input │
+                    └──────────┬──────────┘
+                               │
+                     Browser Web Speech API
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   Next.js Frontend  │
+                    │      page.tsx       │
+                    └──────────┬──────────┘
+                               │
+                         POST /api/chat
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │  Next.js API Route  │
+                    │ app/api/chat/route  │
+                    └──────────┬──────────┘
+                               │
+                  ┌────────────┴────────────┐
+                  │                         │
+                  ▼                         ▼
+             ┌─────────┐              ┌──────────┐
+             │ Ollama  │              │ OpenAI   │
+             │ Local   │              │ Optional │
+             └────┬────┘              └────┬─────┘
+                  │                         │
+                  └────────────┬────────────┘
+                               ▼
+                    Structured AI Response
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+           Speech            Topics          Diagram
+              │                │                │
+              ▼                ▼                ▼
+       Browser TTS       Notes/Formulas    Data Flow UI
+```
 
-- **Voice workspace:** start and stop listening, mute or unmute spoken responses, review the transcript, and type a question.
-- **Learning workspace:** read the explanation, expand the data-flow diagram, review key points, download notes as a PDF, and open the questions list in a popup.
+The structured response keeps the spoken explanation, written notes, formulas, and visual data flow synchronized. Muting the agent only disables Browser TTS; the text response and diagrams continue to render.
+
+## Repository structure
+
+```text
+Voice-Agent-bot/
+│
+├── app/
+│   ├── api/
+│   │   └── chat/
+│   │       └── route.ts
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── components/
+│   ├── DiagramPanel.tsx
+│   ├── IconRenderer.tsx
+│   ├── TranscriptLog.tsx
+│   └── VoiceOrb.tsx
+│
+├── lib/
+│   ├── conversation.ts
+│   ├── diagramSchema.ts
+│   └── audio/
+│       └── level.ts
+│
+├── public/
+│   ├── voice-agent-tutor.png
+│   └── voice-agent-tutor-initial.png
+│
+├── .env.example
+├── AGENTS.md
+├── next.config.ts
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+### Responsibilities by folder
+
+- **`app/`** contains the Next.js routes, root layout, and main page.
+- **`app/api/chat/`** receives conversation messages, selects Ollama or OpenAI, validates the response, and returns structured tutor data.
+- **`components/`** contains reusable interface pieces for the orb, transcript, icons, notes, diagrams, questions popup, and PDF export.
+- **`lib/`** contains browser conversation state, speech recognition and synthesis helpers, schemas, prompt rules, and audio-level utilities.
+- **`public/`** contains static README screenshots and other public assets.
 
 ## Features
 
@@ -26,6 +110,15 @@ The interface is split into two working areas:
 - Questions-asked popup for reviewing the current session.
 - PDF export for generated learning notes.
 - Math rendering with KaTeX.
+
+## Preview
+
+![Voice Agent Tutor interface](./public/voice-agent-tutor.png)
+
+The interface is split into two working areas:
+
+- **Voice workspace:** start and stop listening, mute or unmute spoken responses, review the transcript, and type a question.
+- **Learning workspace:** read the explanation, expand the data-flow diagram, review key points, download notes as a PDF, and open the questions list in a popup.
 
 ## How the application works
 
