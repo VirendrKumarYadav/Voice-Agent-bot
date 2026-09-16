@@ -2,6 +2,8 @@
 
 Voice Agent Tutor is a voice-first learning assistant built with Next.js. Ask a question by speaking or typing, receive an AI-generated explanation, hear the response through the browser, and follow the explanation visually through a responsive data-flow diagram.
 
+![Voice Agent Tutor initial screen](./public/voice-agent-tutor-initial.png)
+
 ## Preview
 
 ![Voice Agent Tutor interface](./public/voice-agent-tutor.png)
