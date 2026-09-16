@@ -112,7 +112,11 @@ function listenWithBrowser(): {
   };
 }
 
-async function speakTextWithBrowser(text: string): Promise<void> {
+async function speakTextWithBrowser(
+  text: string,
+  mutedRef: { current: boolean }
+): Promise<void> {
+  if (mutedRef.current) return;
   if (!("speechSynthesis" in window)) {
     throw new Error("Browser speech synthesis is not available in this browser");
   }
@@ -123,7 +127,13 @@ async function speakTextWithBrowser(text: string): Promise<void> {
     utterance.pitch = 1;
     utterance.volume = 1;
     utterance.onend = () => resolve();
-    utterance.onerror = () => reject(new Error("Speech synthesis failed"));
+    utterance.onerror = () => {
+      if (mutedRef.current) {
+        resolve();
+      } else {
+        reject(new Error("Speech synthesis failed"));
+      }
+    };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   });
@@ -152,8 +162,10 @@ export function useVoiceAgent() {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   const runningRef = useRef(false);
+  const mutedRef = useRef(false);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const transcriptRef = useRef<TranscriptEntry[]>([]);
 
@@ -197,7 +209,7 @@ export function useVoiceAgent() {
 
         if (!runningRef.current) break;
         setStatus("speaking");
-        await speakTextWithBrowser(reply.speech);
+        await speakTextWithBrowser(reply.speech, mutedRef);
         setLevel(0);
       } catch (err) {
         console.error("[voice agent loop]", err);
@@ -247,6 +259,13 @@ export function useVoiceAgent() {
     setIsRunning(false);
   }, []);
 
+  const toggleMute = useCallback(() => {
+    const nextMuted = !mutedRef.current;
+    mutedRef.current = nextMuted;
+    setIsMuted(nextMuted);
+    if (nextMuted) window.speechSynthesis?.cancel();
+  }, []);
+
   const askText = useCallback(
     async (question: string) => {
       const text = question.trim();
@@ -263,7 +282,7 @@ export function useVoiceAgent() {
         setTopics(reply.topics);
         appendTranscript({ role: "assistant", text: reply.speech });
         setStatus("speaking");
-        await speakTextWithBrowser(reply.speech);
+        await speakTextWithBrowser(reply.speech, mutedRef);
         setStatus("idle");
       } catch (err) {
         console.error("[text question]", err);
@@ -284,5 +303,7 @@ export function useVoiceAgent() {
     start,
     stop,
     askText,
+    isMuted,
+    toggleMute,
   };
 }

@@ -1,26 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Voice Agent Tutor
 
-Give it your best.
+Voice Agent Tutor is a voice-first learning assistant built with Next.js. Ask a question by speaking or typing, receive an AI-generated explanation, hear the response through the browser, and follow the explanation visually through a responsive data-flow diagram.
 
-## Getting Started
+## Preview
 
-This app supports two AI backends:
+![Voice Agent Tutor interface](./public/voice-agent-tutor.png)
 
-- Local Ollama (default)
-- OpenAI (optional, when you provide an API key)
+The interface is split into two working areas:
 
-When using Ollama, voice input and output use the browser's built-in Web Speech
-APIs, because Ollama itself is a text-generation server and does not provide
-speech-to-text or text-to-speech. Use Google Chrome or Safari for the best
-browser speech support.
+- **Voice workspace:** start and stop listening, mute or unmute spoken responses, review the transcript, and type a question.
+- **Learning workspace:** read the explanation, expand the data-flow diagram, review key points, download notes as a PDF, and open the questions list in a popup.
 
-Create a local environment file from the example and adjust it to your setup:
+## Features
+
+- Voice input using the browser Web Speech API.
+- Browser text-to-speech output with a mute/unmute control.
+- Text questions as an alternative to voice input.
+- Ollama support for local, private AI responses.
+- Optional OpenAI support.
+- Structured AI responses containing speech, topic notes, formulas, and diagrams.
+- Responsive input → process → output data-flow diagrams.
+- Collapsible diagrams that wrap to fit the available width without horizontal scrolling.
+- Questions-asked popup for reviewing the current session.
+- PDF export for generated learning notes.
+- Math rendering with KaTeX.
+
+## How the application works
+
+1. Click **Start** and ask a question. The browser converts speech to text.
+2. The client sends the conversation to `/api/chat`.
+3. The API route selects Ollama or OpenAI based on `AI_PROVIDER`.
+4. The model returns a validated structured response:
+   - `speech` is a short explanation designed to be spoken.
+   - `topics` contains descriptions, formulas, key points, and diagram data.
+5. The client adds the question and answer to the transcript.
+6. Browser speech synthesis reads the answer aloud unless the agent is muted.
+7. The learning workspace renders the topic and its data flow:
+   - blue nodes represent information inputs,
+   - the indigo node represents processing or transformation,
+   - the green node represents the result or takeaway.
+
+## Project structure
+
+```text
+app/
+  api/chat/route.ts       AI provider selection, prompt, validation, fallback
+  globals.css             Tailwind entry point and global styles
+  layout.tsx              Root HTML layout and fonts
+  page.tsx                Main two-panel voice tutor interface
+components/
+  DiagramPanel.tsx        Notes, data-flow diagrams, questions popup, PDF export
+  IconRenderer.tsx        Safe Lucide icon lookup for model-generated diagrams
+  TranscriptLog.tsx       Conversation transcript
+  VoiceOrb.tsx            Listening and speaking visualizer
+lib/
+  conversation.ts         Speech recognition, speech synthesis, chat state
+  diagramSchema.ts        Zod schemas, types, and tutor system prompt
+  audio/level.ts           Audio-level helpers used by the voice visualizer
+public/
+  voice-agent-tutor.png   README preview screenshot
+.env.example              Environment variable template
+```
+
+## Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create a local environment file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Example values:
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Configuration
+
+The default configuration uses a local Ollama server:
 
 ```env
 AI_PROVIDER=ollama
@@ -28,59 +94,44 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=phi3:latest
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
-ELEVENLABS_API_KEY=
-ELEVENLABS_VOICE_ID=
 TTS_PROVIDER=browser
 ```
 
-If you want to use OpenAI instead, set `AI_PROVIDER=openai` and add your API key to `OPENAI_API_KEY`.
+To use OpenAI instead, set `AI_PROVIDER=openai` and provide `OPENAI_API_KEY`. The browser speech APIs handle text-to-speech in the current implementation, so no speech API key is required for voice output.
 
-### Environment variable reference
-
-| Variable | Description |
+| Variable | Purpose |
 | --- | --- |
-| `AI_PROVIDER` | Selects the text-generation backend: `ollama` (default) or `openai`. |
-| `OLLAMA_BASE_URL` | URL of the local Ollama server. Defaults to `http://localhost:11434`. |
-| `OLLAMA_MODEL` | Ollama model used for chat responses, such as `phi3:latest`. The model must already be available in Ollama. |
-| `OPENAI_API_KEY` | Secret OpenAI API key. Required when `AI_PROVIDER=openai`; keep it private and never commit it. |
-| `OPENAI_MODEL` | OpenAI chat model to use, such as `gpt-4o-mini`. |
-| `ELEVENLABS_API_KEY` | Secret ElevenLabs API key for ElevenLabs text-to-speech integrations. |
-| `ELEVENLABS_VOICE_ID` | ElevenLabs voice ID to use for speech synthesis. |
-| `TTS_PROVIDER` | Selects the text-to-speech backend. Use `browser` for the built-in Web Speech API. |
+| `AI_PROVIDER` | `ollama` or `openai` |
+| `OLLAMA_BASE_URL` | Local Ollama server URL |
+| `OLLAMA_MODEL` | Installed Ollama model name |
+| `OPENAI_API_KEY` | OpenAI secret key |
+| `OPENAI_MODEL` | OpenAI model name |
+| `TTS_PROVIDER` | Current voice output mode, normally `browser` |
 
-The ElevenLabs variables are optional. Keep `.env.local` out of version control and
-only commit `.env.example` with blank secret values.
+## Voice controls
 
-Then run the development server:
+- **Start:** begins one-turn browser speech recognition and continues the conversation loop.
+- **Stop:** stops listening and cancels current browser speech.
+- **Mute:** cancels active spoken output and prevents future answers from being spoken until unmuted. Text responses and diagrams still continue to work.
+
+Voice recognition and synthesis require a browser with Web Speech API support. Chrome and Safari generally provide the best support.
+
+## Scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev    # Start the development server
+npm run build  # Create a production build
+npm run start  # Start the production server
+npm run lint   # Run ESLint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Build and start the application with:
 
-## Learn More
+```bash
+npm run build
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# Voice-Agent-bot
-# Voice-Agent-bot
-# Voice-Agent-bot
+Keep `.env.local` private. Only `.env.example` should contain blank example values.

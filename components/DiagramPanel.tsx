@@ -1,8 +1,8 @@
-import { ChevronDown, Download } from "lucide-react";
+import { ArrowRight, ChevronDown, Download, X } from "lucide-react";
 import { useState } from "react";
 import katex from "katex";
 import { IconRenderer } from "./IconRenderer";
-import type { Diagram, FormulaStep, TopicNote } from "@/lib/diagramSchema";
+import type { Diagram, FormulaStep, IconName, TopicNote } from "@/lib/diagramSchema";
 
 function MathExpression({ value, display = false }: { value: string; display?: boolean }) {
   const html = katex.renderToString(value, {
@@ -86,60 +86,126 @@ function DiagramVisual({ diagram }: { diagram: Diagram }) {
   );
 }
 
-function PatternStructure({ topic }: { topic: TopicNote }) {
-  const center = topic.diagram.centerObject?.label || topic.name;
-  const nodes = topic.diagram.actors.length > 0
-    ? topic.diagram.actors.map((actor) => ({
-        label: actor.label,
-        caption: actor.caption || "contributes to the topic",
-      }))
-    : topic.diagram.keyPoints.length > 0
-      ? topic.diagram.keyPoints.map((point) => ({
-          label: point,
-          caption: "key point",
-        }))
-      : [{ label: topic.name, caption: topic.description }];
-  const outcome = topic.diagram.keyPoints.at(-1) || topic.description;
+function FlowNode({
+  label,
+  caption,
+  icon,
+  tone,
+}: {
+  label: string;
+  caption: string;
+  icon: IconName;
+  tone: "input" | "process" | "output";
+}) {
+  const toneClasses = {
+    input: "border-sky-200 bg-sky-50 text-sky-900",
+    process: "border-indigo-200 bg-indigo-50 text-indigo-950",
+    output: "border-emerald-200 bg-emerald-50 text-emerald-950",
+  };
+  const iconClasses = {
+    input: "bg-white text-sky-700 ring-sky-200",
+    process: "bg-white text-indigo-700 ring-indigo-200",
+    output: "bg-white text-emerald-700 ring-emerald-200",
+  };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-center">
-      <p className="mb-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-300">
-        {topic.diagram.title || "Visual structure"}
-      </p>
-      <div className="overflow-x-auto">
-        <div className="mx-auto min-w-[360px] max-w-xl font-mono text-xs">
-          <div className="mx-auto w-fit rounded-lg border border-sky-400/50 bg-sky-400/10 px-4 py-2 text-sky-200">
-            * {center} *
-          </div>
-          <div className="leading-4 text-slate-500">
-            <div>.................|.................</div>
-            <div>.................*.................</div>
-            <div>.................|.................</div>
-          </div>
-          <div className="flex flex-wrap items-start justify-center gap-2">
-            {nodes.slice(0, 6).map((node, index) => (
-              <div key={`${node.label}-${index}`} className="flex w-28 flex-col items-center">
-                <div className="text-slate-500">{index % 2 === 1 ? "***" : "..."}</div>
-                <div className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-sky-100">
-                  <div>* {node.label} *</div>
-                  <div className="mt-1 text-[10px] leading-4 text-slate-400">
-                    {node.caption}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="leading-4 text-slate-500">
-            <div>.................|.................</div>
-            <div>.................*.................</div>
-            <div>.................|.................</div>
-          </div>
-          <div className="mx-auto w-fit rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-4 py-2 text-emerald-200">
-            * {outcome} *
-          </div>
-        </div>
+    <div className={`w-44 shrink-0 rounded-2xl border p-3 shadow-sm ${toneClasses[tone]}`}>
+      <div className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl ring-1 ${iconClasses[tone]}`}>
+        <IconRenderer name={icon} size={21} />
       </div>
+      <p className="text-center text-xs font-bold">{label}</p>
+      <p className="mt-1 text-center text-[11px] leading-4 opacity-70">{caption}</p>
     </div>
+  );
+}
+
+function FlowArrow({ label }: { label: string }) {
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1 text-slate-400">
+      <ArrowRight size={22} aria-hidden="true" />
+      <span className="max-w-20 text-center text-[10px] leading-3">{label}</span>
+    </div>
+  );
+}
+
+function DataFlowDiagram({ topic }: { topic: TopicNote }) {
+  const [flowExpanded, setFlowExpanded] = useState(true);
+  const { diagram } = topic;
+  const center = diagram.centerObject;
+  const actors = diagram.actors.length > 0
+    ? diagram.actors
+    : diagram.keyPoints.map((point) => ({
+        icon: "FileText" as const,
+        label: point,
+        caption: "important idea",
+      }));
+  const output = diagram.keyPoints.at(-1) || "Understanding";
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-slate-50">
+      <button
+        type="button"
+        onClick={() => setFlowExpanded((expanded) => !expanded)}
+        aria-expanded={flowExpanded}
+        className="flex w-full items-center justify-between gap-3 p-4 text-left sm:p-5"
+      >
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Data flow</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">{diagram.title || topic.name}</p>
+        </div>
+        <span className="flex items-center gap-2">
+          <span className="hidden rounded-full bg-white px-2.5 py-1 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200 sm:inline">
+            input → process → output
+          </span>
+          <ChevronDown
+            size={17}
+            className={`text-slate-500 transition-transform ${flowExpanded ? "rotate-180" : ""}`}
+          />
+        </span>
+      </button>
+      {flowExpanded && (
+        <div className="border-t border-slate-200 px-4 pb-4 sm:px-5 sm:pb-5">
+          <div className="flex flex-wrap items-center justify-center gap-3 py-4">
+          {actors.slice(0, 6).map((actor, index) => (
+            <div key={`${actor.label}-${index}`} className="flex items-center gap-3">
+              <FlowNode
+                label={actor.label}
+                caption={actor.caption || "feeds information"}
+                icon={actor.icon}
+                tone="input"
+              />
+              {index < actors.slice(0, 6).length - 1 ? (
+                <FlowArrow label="shares data" />
+              ) : center ? (
+                <FlowArrow label="sends data" />
+              ) : null}
+            </div>
+          ))}
+          {center && (
+            <>
+              <FlowNode
+                label={center.label}
+                caption="transforms the input"
+                icon={center.icon}
+                tone="process"
+              />
+              <FlowArrow label="produces result" />
+            </>
+          )}
+          {!center && actors.length > 0 && <FlowArrow label="leads to" />}
+          <FlowNode
+            label={output}
+            caption="what you understand"
+            icon="CheckCircle"
+            tone="output"
+          />
+          </div>
+          <p className="text-center text-[11px] text-slate-500">
+            Follow the arrows to see how information moves through this concept.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -244,7 +310,7 @@ export function DiagramPanel({
   topics: TopicNote[];
   questions?: string[];
 }) {
-  const [questionsExpanded, setQuestionsExpanded] = useState(false);
+  const [questionsOpen, setQuestionsOpen] = useState(false);
 
   if (topics.length === 0 && questions.length === 0) {
     return (
@@ -261,12 +327,23 @@ export function DiagramPanel({
           <h2 className="text-sm font-semibold text-slate-900">Topic notes</h2>
           <p className="text-xs text-slate-500">{topics.length} {topics.length === 1 ? "topic" : "topics"}</p>
         </div>
-        <button type="button" onClick={() => void downloadNotes(topics)} className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
-          <Download size={14} /> Download PDF
-        </button>
+        <div className="flex items-center gap-2">
+          {questions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setQuestionsOpen(true)}
+              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 transition hover:bg-amber-100"
+            >
+              Questions asked ({questions.length})
+            </button>
+          )}
+          <button type="button" onClick={() => void downloadNotes(topics)} className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+            <Download size={14} /> Download PDF
+          </button>
+        </div>
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_220px]">
-        <div className="order-2 min-h-0 overflow-y-auto lg:order-1">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+        <div>
           <div className="flex flex-col gap-5">
             {topics.map((topic, index) => (
               <article key={`${topic.name}-${index}`} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
@@ -282,60 +359,46 @@ export function DiagramPanel({
                   </div>
                 )}
                 <div className="mb-5">
-                  <PatternStructure topic={topic} />
+                  <DataFlowDiagram topic={topic} />
                 </div>
                 <DiagramVisual diagram={topic.diagram} />
               </article>
             ))}
           </div>
         </div>
-
-        {questions.length > 0 && (
-          <aside className="order-1 min-h-0 lg:order-2">
-            <section className="rounded-2xl border border-amber-100 bg-amber-50/70 lg:sticky lg:top-0">
-            <button
-              type="button"
-              onClick={() => setQuestionsExpanded((expanded) => !expanded)}
-              aria-expanded={questionsExpanded}
-              className="flex w-full items-center justify-between gap-3 p-4 text-left"
-            >
-              <span>
-                <span className="block text-xs font-semibold uppercase tracking-wide text-amber-700">
-                  Questions asked
-                </span>
-                <span className="mt-1 block text-xs text-amber-800/70">
-                  {questions.length} {questions.length === 1 ? "question" : "questions"}
-                </span>
-              </span>
-              <ChevronDown
-                size={17}
-                className={`shrink-0 text-amber-700 transition-transform ${
-                  questionsExpanded ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {questionsExpanded && (
-              <ol className="max-h-56 overflow-y-auto flex flex-col gap-2 border-t border-amber-100 px-4 pb-4 pt-3">
-                {questions.map((question, index) => {
-                  const cleanedQuestion = question.replace(/^\s*\d+[\s.)-]*/, "").trim();
-                  return (
-                    <li
-                      key={`${question}-${index}`}
-                      className="flex items-start gap-2 text-sm leading-5 text-slate-700"
-                    >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-800">
-                        {index + 1}
-                      </span>
-                      <span>{cleanedQuestion || question}</span>
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
-            </section>
-          </aside>
-        )}
       </div>
+      {questionsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="presentation" onClick={() => setQuestionsOpen(false)}>
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="questions-dialog-title"
+            className="max-h-[80vh] w-full max-w-lg overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-amber-100 bg-amber-50 px-5 py-4">
+              <div>
+                <h3 id="questions-dialog-title" className="text-sm font-semibold text-amber-900">Questions asked</h3>
+                <p className="mt-1 text-xs text-amber-800/70">{questions.length} {questions.length === 1 ? "question" : "questions"}</p>
+              </div>
+              <button type="button" onClick={() => setQuestionsOpen(false)} aria-label="Close questions" className="rounded-lg p-1.5 text-amber-700 transition hover:bg-amber-100">
+                <X size={18} />
+              </button>
+            </div>
+            <ol className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto p-5">
+              {questions.map((question, index) => {
+                const cleanedQuestion = question.replace(/^\s*\d+[\s.)-]*/, "").trim();
+                return (
+                  <li key={`${question}-${index}`} className="flex items-start gap-3 text-sm leading-5 text-slate-700">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-bold text-amber-800">{index + 1}</span>
+                    <span>{cleanedQuestion || question}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

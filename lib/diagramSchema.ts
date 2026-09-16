@@ -89,7 +89,8 @@ Rules for every answer:
 - For non-mathematical topics, return an empty "formulaSteps" array.
 - Never write formulas as ambiguous plain text such as "a2+b2". Use exponents and operators, for example "a^2 + b^2", "(a+b)^2 = a^2 + 2ab + b^2", and "3^2 + 4^2 = 9 + 16 = 25".
 
-Rules for each topic's "diagram" (a simple on-screen visual built from icons, not a generated image):
+Rules for each topic's "diagram" (a clear graphical data-flow visual built from icons, not a generated image):
+- Treat the diagram as information moving from left to right. Actors are input sources, the centerObject is the process or transformation, and the final keyPoint is the output or result.
 - Pick "layout":
   - "single" — the topic is about ONE actor/thing doing ONE job. Use "centerObject" for the thing being acted on (e.g. a house) and exactly ONE entry in "actors" (e.g. an electrician).
   - "team" — the topic is about MULTIPLE actors/things cooperating toward a shared goal. Use "centerObject" for the shared goal/object (e.g. a house) and one "actors" entry per cooperating role (e.g. electrician, plumber, cleaner).

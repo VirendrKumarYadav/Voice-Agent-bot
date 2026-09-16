@@ -81,7 +81,7 @@ function createFallbackTopic(question: string, speech: string): TopicNote {
     description: speech,
     formulaSteps: [],
     diagram: {
-      title: "Understanding framework",
+      title: "How it works",
       layout: "list",
       centerObject: null,
       actors: [],
